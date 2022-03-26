@@ -153,13 +153,22 @@ if st.button("Recommend"):
                 # siteUrl
                 st.write(f"Anilist URL: {rec['siteUrl']}")
                 # startDate
-                st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
-                #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                if pd.isnull(rec['startDate']):
+                    st.write(f"Start date: -")
+                else:
+                    st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
+                    #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
                 # endDate
-                st.write(f"Start date: {rec['endDate'].strftime('%d %b %Y')}")
-                #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                if pd.isnull(rec['endDate']):
+                    st.write(f"End date: -")
+                else:
+                    st.write(f"End date: {rec['endDate'].strftime('%d %b %Y')}")
+                    #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
                 # duration
-                st.write(f"Episode duration: {int(rec['duration'])} mins")
+                if pd.isnull(rec['duration']):
+                    st.write(f"Episode duration: -")
+                else:
+                    st.write(f"Episode duration: {int(rec['duration'])} mins")
         
                 st.text("")
             
