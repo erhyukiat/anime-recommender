@@ -122,21 +122,21 @@ if st.button("Recommend"):
             genres_pred_type = 'all'
         elif genres_prediction_type == 'Match at least one of the selected genres':
             genres_pred_type = 'at_least_one'
-            
+
         recommendations = make_predictions_with_genres(genres, num_preds, genres_pred_type)
         count = 0
-        
+
         for rec in recommendations:
             count += 1
 
             st.header(f"Recommendation #{count}")
-            
-            # Romaji title
+
+            # title
             st.subheader(f"{rec['title_romaji']}")
             if rec['title_romaji'] != rec['title_english']:
                 # Show english title if english and romaji title are not the same
                 st.write(f"Alternative title: {rec['title_english']} ")
-            
+
             image_col, details_col = st.columns([2,3])
 
             with image_col:
@@ -169,44 +169,57 @@ if st.button("Recommend"):
                     st.write(f"Episode duration: -")
                 else:
                     st.write(f"Episode duration: {int(rec['duration'])} mins")
-        
+
                 st.text("")
-            
+
     elif input_type == "Anime titles":
         recommendations = make_predictions_with_titles(titles, num_preds)
         count = 0
-        
+
         for rec in recommendations:
             count += 1
             st.header(f"Recommendation #{count}")
-            # title_english
-            if rec['title_romaji'] == rec['title_english']:
-                st.subheader(f"{rec['title_romaji']}")
-            else:
-                st.subheader(f"{rec['title_romaji']}")
-                st.write(f"Alternative title: {rec['title_english']} ")
-            # title_romaji
-            #st.markdown(f"### Romaji title: ")
-            # image
-            st.image(f"{rec['coverImage_large']}")
-            # description
-            st.write(f"Description: {re.sub('<[^<]+?>', '', rec['description'].strip())}")
-            # averageScore
-            st.write(f"Average score: {rec['averageScore']}")
-            # genres
-            st.write(f"Genres: {rec['genres']}")
-            # siteUrl
-            st.write(f"Anilist URL: {rec['siteUrl']}")
-            # startDate
-            st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
-            #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
-            # endDate
-            st.write(f"Start date: {rec['endDate'].strftime('%d %b %Y')}")
-            #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
-            # duration
-            st.write(f"Episode duration: {int(rec['duration'])} mins")
-            st.text("")
             
+            # title
+            st.subheader(f"{rec['title_romaji']}")
+            if rec['title_romaji'] != rec['title_english']:
+                # Show english title if english and romaji title are not the same
+                st.write(f"Alternative title: {rec['title_english']} ")
+            
+            image_col, details_col = st.columns([2,3])
+            
+            with image_col:
+                # image
+                st.image(f"{rec['coverImage_large']}")
+            
+            with details_col:
+                # description
+                st.write(f"Description: {re.sub('<[^<]+?>', '', rec['description'].strip())}")
+                # averageScore
+                st.write(f"Average score: {rec['averageScore']}")
+                # genres
+                st.write(f"Genres: {rec['genres']}")
+                # siteUrl
+                st.write(f"Anilist URL: {rec['siteUrl']}")
+                # startDate
+                if pd.isnull(rec['startDate']):
+                    st.write(f"Start date: -")
+                else:
+                    st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
+                    #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                # endDate
+                if pd.isnull(rec['endDate']):
+                    st.write(f"End date: -")
+                else:
+                    st.write(f"End date: {rec['endDate'].strftime('%d %b %Y')}")
+                    #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                # duration
+                if pd.isnull(rec['duration']):
+                    st.write(f"Episode duration: -")
+                else:
+                    st.write(f"Episode duration: {int(rec['duration'])} mins")
+            st.text("")
+
     elif input_type == "Existing user":
         pass
     else:
