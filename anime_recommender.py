@@ -106,12 +106,13 @@ input_type = st.radio("Select your input type:", ('Favourite genres','Favourite 
 
 if  input_type == "Favourite genres":
     container = st.container()
-    all = st.checkbox("Select all")
+    all = st.checkbox("Select all (if you are not sure what your favourite genres are)")
 
     if all:
         genres = container.multiselect("Select your favourite genres:", anime_genres_list, anime_genres_list)
         genres_prediction_type = st.radio('Do you want your recommendations to match at least one of your selections or to have all selected genres?',
                                      ['Match at least one of the selected genres'])
+        genres = anime_genres_list
     else:
         genres =  container.multiselect("Select your favourite genres:", anime_genres_list)
         genres_prediction_type = st.radio('Do you want your recommendations to match at least one of your selections or to have all selected genres?',
