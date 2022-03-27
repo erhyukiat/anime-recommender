@@ -97,130 +97,146 @@ def all_genres_found(genres, user_input_genres, pred_type):
 
 st.title("Anime recommender")
 st.write("By Erh Yu Kiat [GitHub](https://github.com/erhyukiat)")
-st.markdown("Data from [Anilist](https://anilist.co) | Model from [LightFM](https://github.com/lyst/lightfm) and [Microsoft Recommenders](https://github.com/microsoft/recommenders)")
+st.markdown("[Source code](https://github.com/erhyukiat/anime-recommender) | Model from [LightFM](https://github.com/lyst/lightfm) and [Microsoft Recommenders](https://github.com/microsoft/recommenders)")
 st.text("")
 st.text("")
 
-input_type = st.radio("Select your input type:", ('Genres','Anime titles'))
-#input_type = st.radio("Select your input type:", ('Genres','Anime titles','Anilist user ID'))
+input_type = st.radio("Select your input type:", ('Favourite genres','Favourite anime titles'))
+#input_type = st.radio("Select your input type:", ('Favourite genres','Favourite anime titles','Anilist user ID'))
 
-if  input_type == "Genres":
-    genres = st.multiselect('Select your favourite genres:',anime_genres_list)
-    genres_prediction_type = st.radio('Do you want your recommendations to match at least one of your selections or to have all selected genres?',
+if  input_type == "Favourite genres":
+    container = st.container()
+    all = st.checkbox("Select all")
+
+    if all:
+        genres = container.multiselect("Select your favourite genres:", anime_genres_list, anime_genres_list)
+        genres_prediction_type = st.radio('Do you want your recommendations to match at least one of your selections or to have all selected genres?',
+                                     ['Match at least one of the selected genres'])
+    else:
+        genres =  container.multiselect("Select your favourite genres:", anime_genres_list)
+        genres_prediction_type = st.radio('Do you want your recommendations to match at least one of your selections or to have all selected genres?',
                                      ('Match at least one of the selected genres','Have all selected genres'))
-elif input_type == "Anime titles":
+    #genres = st.multiselect('Select your favourite genres:',anime_genres_list)
+    
+elif input_type == "Favourite anime titles":
     titles = st.multiselect('Select your favourite anime titles:',anime_titles_list)
 elif input_type == "Anilist user ID":
-    st.caption('Disclaimer: Your user ID may not be found in the data as only a subset of Anilist users are used')
+    st.caption('Disclaimer: Your user ID may not be found in the data as only a small subset of Anilist users are used to train the model')
     user_id = st.text_input('Enter your Anilist user ID')
     
-num_preds = st.number_input("How many recommendations do you want?", 1, 100, 10)
+num_preds = st.slider("How many recommendations do you want?", 1, 100, 10)
 
 if st.button("Recommend"):
-    if input_type == "Genres":
+    if input_type == "Favourite genres":
         if genres_prediction_type == 'Have all selected genres':
             genres_pred_type = 'all'
         elif genres_prediction_type == 'Match at least one of the selected genres':
             genres_pred_type = 'at_least_one'
+        
+        if len(genres) > 0:
+            recommendations = make_predictions_with_genres(genres, num_preds, genres_pred_type)
+            count = 0
 
-        recommendations = make_predictions_with_genres(genres, num_preds, genres_pred_type)
-        count = 0
+            for rec in recommendations:
+                count += 1
 
-        for rec in recommendations:
-            count += 1
+                st.header(f"Recommendation #{count}")
 
-            st.header(f"Recommendation #{count}")
+                # title
+                st.subheader(f"{rec['title_romaji']}")
+                if rec['title_romaji'] != rec['title_english']:
+                    # Show english title if english and romaji title are not the same
+                    st.write(f"Alternative title: {rec['title_english']} ")
 
-            # title
-            st.subheader(f"{rec['title_romaji']}")
-            if rec['title_romaji'] != rec['title_english']:
-                # Show english title if english and romaji title are not the same
-                st.write(f"Alternative title: {rec['title_english']} ")
+                image_col, details_col = st.columns([2,3])
 
-            image_col, details_col = st.columns([2,3])
+                with image_col:
+                    # image
+                    st.image(f"{rec['coverImage_large']}")
 
-            with image_col:
-                # image
-                st.image(f"{rec['coverImage_large']}")
+                with details_col:
+                    # description                
+                    st.write(f"Description: {re.sub('<[^<]+?>', '', rec['description'].strip())}")
+                    # averageScore
+                    st.write(f"Average score: {rec['averageScore']}")
+                    # genres
+                    st.write(f"Genres: {rec['genres']}")
+                    # siteUrl
+                    st.write(f"Anilist URL: {rec['siteUrl']}")
+                    # startDate
+                    if pd.isnull(rec['startDate']):
+                        st.write(f"Start date: -")
+                    else:
+                        st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
+                        #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                    # endDate
+                    if pd.isnull(rec['endDate']):
+                        st.write(f"End date: -")
+                    else:
+                        st.write(f"End date: {rec['endDate'].strftime('%d %b %Y')}")
+                        #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                    # duration
+                    if pd.isnull(rec['duration']):
+                        st.write(f"Episode duration: -")
+                    else:
+                        st.write(f"Episode duration: {int(rec['duration'])} mins")
+        else:
+            st.write("No genres selected")
+                
+        st.text("")
 
-            with details_col:
-                # description                
-                st.write(f"Description: {re.sub('<[^<]+?>', '', rec['description'].strip())}")
-                # averageScore
-                st.write(f"Average score: {rec['averageScore']}")
-                # genres
-                st.write(f"Genres: {rec['genres']}")
-                # siteUrl
-                st.write(f"Anilist URL: {rec['siteUrl']}")
-                # startDate
-                if pd.isnull(rec['startDate']):
-                    st.write(f"Start date: -")
-                else:
-                    st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
-                    #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
-                # endDate
-                if pd.isnull(rec['endDate']):
-                    st.write(f"End date: -")
-                else:
-                    st.write(f"End date: {rec['endDate'].strftime('%d %b %Y')}")
-                    #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
-                # duration
-                if pd.isnull(rec['duration']):
-                    st.write(f"Episode duration: -")
-                else:
-                    st.write(f"Episode duration: {int(rec['duration'])} mins")
+    elif input_type == "Favourite anime titles":
+        if len(titles) > 0 and (num_preds>=1 and num_preds <= 100):
+            recommendations = make_predictions_with_titles(titles, num_preds)
+            count = 0
 
-                st.text("")
+            for rec in recommendations:
+                count += 1
+                st.header(f"Recommendation #{count}")
 
-    elif input_type == "Anime titles":
-        recommendations = make_predictions_with_titles(titles, num_preds)
-        count = 0
+                # title
+                st.subheader(f"{rec['title_romaji']}")
+                if rec['title_romaji'] != rec['title_english']:
+                    # Show english title if english and romaji title are not the same
+                    st.write(f"Alternative title: {rec['title_english']} ")
 
-        for rec in recommendations:
-            count += 1
-            st.header(f"Recommendation #{count}")
-            
-            # title
-            st.subheader(f"{rec['title_romaji']}")
-            if rec['title_romaji'] != rec['title_english']:
-                # Show english title if english and romaji title are not the same
-                st.write(f"Alternative title: {rec['title_english']} ")
-            
-            image_col, details_col = st.columns([2,3])
-            
-            with image_col:
-                # image
-                st.image(f"{rec['coverImage_large']}")
-            
-            with details_col:
-                # description
-                st.write(f"Description: {re.sub('<[^<]+?>', '', rec['description'].strip())}")
-                # averageScore
-                st.write(f"Average score: {rec['averageScore']}")
-                # genres
-                st.write(f"Genres: {rec['genres']}")
-                # siteUrl
-                st.write(f"Anilist URL: {rec['siteUrl']}")
-                # startDate
-                if pd.isnull(rec['startDate']):
-                    st.write(f"Start date: -")
-                else:
-                    st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
-                    #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
-                # endDate
-                if pd.isnull(rec['endDate']):
-                    st.write(f"End date: -")
-                else:
-                    st.write(f"End date: {rec['endDate'].strftime('%d %b %Y')}")
-                    #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
-                # duration
-                if pd.isnull(rec['duration']):
-                    st.write(f"Episode duration: -")
-                else:
-                    st.write(f"Episode duration: {int(rec['duration'])} mins")
-            st.text("")
+                image_col, details_col = st.columns([2,3])
+
+                with image_col:
+                    # image
+                    st.image(f"{rec['coverImage_large']}")
+
+                with details_col:
+                    # description
+                    st.write(f"Description: {re.sub('<[^<]+?>', '', rec['description'].strip())}")
+                    # averageScore
+                    st.write(f"Average score: {rec['averageScore']}")
+                    # genres
+                    st.write(f"Genres: {rec['genres']}")
+                    # siteUrl
+                    st.write(f"Anilist URL: {rec['siteUrl']}")
+                    # startDate
+                    if pd.isnull(rec['startDate']):
+                        st.write(f"Start date: -")
+                    else:
+                        st.write(f"Start date: {rec['startDate'].strftime('%d %b %Y')}")
+                        #st.write(f"Start date: {datetime.strptime(rec['startDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                    # endDate
+                    if pd.isnull(rec['endDate']):
+                        st.write(f"End date: -")
+                    else:
+                        st.write(f"End date: {rec['endDate'].strftime('%d %b %Y')}")
+                        #st.write(f"End date: {datetime.strptime(rec['endDate'],'%a, %d %b %Y %H:%M:%S GMT').strftime('%d %b %Y')}")
+                    # duration
+                    if pd.isnull(rec['duration']):
+                        st.write(f"Episode duration: -")
+                    else:
+                        st.write(f"Episode duration: {int(rec['duration'])} mins")
+        else:
+            st.write("No titles selected")
+        st.text("")
 
     elif input_type == "Existing user":
         pass
     else:
-        st.write("Check your input")
+        st.write("Invalid input type")
