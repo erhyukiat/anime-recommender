@@ -2,3 +2,4 @@ pandas
 numpy
 scipy
 recommenders
+click==8
